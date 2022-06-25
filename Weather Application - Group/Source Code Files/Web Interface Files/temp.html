@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+    <script type="text/javascript">
+        function WebSocketAPIExample() {
+            var token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZW5hbnRAdGhpbmdzYm9hcmQub3JnIiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJ1c2VySWQiOiIwNTBhMGRiMC1kOWFjLTExZWMtYjU3ZS0wMzFlNzhhZTkxYTMiLCJlbmFibGVkIjp0cnVlLCJpc1B1YmxpYyI6ZmFsc2UsInRlbmFudElkIjoiMDQxODBjOTAtZDlhYy0xMWVjLWI1N2UtMDMxZTc4YWU5MWEzIiwiY3VzdG9tZXJJZCI6IjEzODE0MDAwLTFkZDItMTFiMi04MDgwLTgwODA4MDgwODA4MCIsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNjUzMjMyMDIyLCJleHAiOjE2NTMyNDEwMjJ9.rnZ1hKDYRZeAPSxugCqOa39kx_hdGukboPl-WzM91c7jVs802k7aCirxFvzNTm29Jqj7_42VcLB3DNmpkMzI8w";
+            var entityId = "9ee43f00-d9b1-11ec-9a2f-135c26c41c4e";
+            var webSocket = new WebSocket("ws://127.0.0.1:8080/api/ws/plugins/telemetry?token=" + token);
+
+            if (entityId === "YOUR_DEVICE_ID") {
+                alert("Invalid device id!");
+                webSocket.close();
+            }
+
+            if (token === "YOUR_JWT_TOKEN") {
+                alert("Invalid JWT token!");
+                webSocket.close();
+            }
+
+            webSocket.onopen = function () {
+                var object = {
+                    tsSubCmds: [
+                        {
+                            entityType: "DEVICE",
+                            entityId: entityId,
+                            scope: "LATEST_TELEMETRY",
+                            cmdId: 10
+                        }
+                    ],
+                    historyCmds: [],
+                    attrSubCmds: []
+                };
+                var data = JSON.stringify(object);
+                webSocket.send(data);
+                //alert("Message is sent: " + data);
+            };
+
+            webSocket.onmessage = function (event) {
+                var received_msg = event.data;
+                //alert("Message is received: " + received_msg);
+                let tempData = [];
+                tempData.push(JSON.parse(received_msg))
+                console.log(tempData.map(x=>x.data))
+                show(tempData.map(x=>x.data))
+            };
+
+            webSocket.onclose = function (event) {
+                //alert("Connection is closed!");
+            };
+        }
+        
+        function show(data) {
+	let tab =
+		`<tr>
+		<th>Temperature</th>
+		</tr>`;
+	
+	// Loop to access all rows
+	for (let r of data) {
+		for(let t of r.temperature){
+		tab += `<tr>
+	<td>${t[1]} </td>
+
+        </tr>`;
+        if(t[1] >= 22) {
+		warning = `<p style="color:red;">TOO HOT</p>`
+		}
+		else if (t[1] < 22) {
+		warning = `<p>NORMAL</p>`
+		}
+	}}
+	// Setting innerHTML as tab variable
+	document.getElementById("temp").innerHTML = tab;
+	document.getElementById("warning").innerHTML = warning;
+}
+    </script>
+
+</head>
+<body>
+
+<div id="sse">
+    <a href="javascript:WebSocketAPIExample()">Fetch Temperature</a>
+  
+	<table id="temp"></table>
+	<div id="warning"></div>
+</div>
+
+</body>
+</html>
